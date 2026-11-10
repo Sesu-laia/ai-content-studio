@@ -1,0 +1,5 @@
+__pycache__/
+.env
+output/*
+!output/.gitkeep
+.DS_Store

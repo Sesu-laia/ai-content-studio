@@ -1,0 +1,69 @@
+classDiagram
+    direction TB
+
+    class ImageGenerator {
+        <<abstract>>
+        +nama_provider: str
+        +biaya_per_gambar: float
+        +STYLE_MODIFIER: dict
+        #_build_full_prompt(prompt, style) str
+        +generate(prompt, style)* GeneratedImage
+    }
+    class DALLEImageGenerator {
+        +api_key: str
+        +timeout: int
+        +generate(prompt, style) GeneratedImage
+    }
+    class MockImageGenerator {
+        +gagal: bool
+        -_counter: int
+        +generate(prompt, style) GeneratedImage
+    }
+    class PollinationsImageGenerator {
+        +lebar: int
+        +tinggi: int
+        +timeout: int
+        -_waktu_terakhir: float$
+        -_tunggu_jeda()
+        +generate(prompt, style) GeneratedImage
+    }
+    ImageGenerator <|-- DALLEImageGenerator
+    ImageGenerator <|-- MockImageGenerator
+    ImageGenerator <|-- PollinationsImageGenerator
+
+    class GeneratedImage {
+        +url: str
+        +prompt: str
+        +style: str
+        +provider: str
+        +biaya: float
+        +dibuat_pada: datetime
+        +to_dict() dict
+    }
+
+    class ContentProject {
+        +prompt: str
+        +gambar_list: list
+        +video_list: list
+        +tambah_gambar(gambar)
+        +pilih_untuk_video(idx) GeneratedImage
+    }
+    ContentProject "1" o-- "*" GeneratedImage
+
+    class ContentPipeline {
+        +image_generator: ImageGenerator
+        +projects: list
+        +jalankan(prompt, style) ContentProject
+        +tambah_gambar_ke(project, style) GeneratedImage
+    }
+    ContentPipeline --> ImageGenerator : memakai
+    ContentPipeline "1" o-- "*" ContentProject
+
+    ImageGenerator ..> GeneratedImage : membuat
+    ContentProject ..> PipelineException : raise
+
+    class PipelineException {
+        +tahap: str
+        +alasan: str
+    }
+    Exception <|-- PipelineException
