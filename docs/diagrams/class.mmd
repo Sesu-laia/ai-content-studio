@@ -1,0 +1,71 @@
+classDiagram
+    direction TB
+    class ImageGenerator {
+        <<abstract>>
+        +nama_provider: str
+        +biaya_per_gambar: float
+        +STYLE_MODIFIER: dict
+        +prompt_valid(prompt)$ bool
+        +daftar_style()$ list
+        #_build_full_prompt(prompt, style) str
+        +generate(prompt, style)* GeneratedImage
+    }
+    class DALLEImageGenerator {
+        +api_key: str
+        +timeout: int
+        +generate(prompt, style) GeneratedImage
+    }
+    class PollinationsImageGenerator {
+        +lebar: int
+        +tinggi: int
+        +timeout: int
+        -_waktu_terakhir: float$
+        -_tunggu_jeda()
+        +generate(prompt, style) GeneratedImage
+    }
+    class MockImageGenerator {
+        +gagal: bool
+        -_counter: int
+        +generate(prompt, style) GeneratedImage
+    }
+    ImageGenerator <|-- DALLEImageGenerator
+    ImageGenerator <|-- PollinationsImageGenerator
+    ImageGenerator <|-- MockImageGenerator
+
+    class GeneratedImage {
+        +url: str
+        +prompt: str
+        +style: str
+        +provider: str
+        +biaya: float
+        +dibuat_pada: datetime
+        +biaya_rupiah: float «property»
+        +to_dict() dict
+    }
+    class ContentProject {
+        -_prompt: str
+        -_gambar_list: list
+        -_video_list: list
+        +prompt: str «property»
+        +gambar_list: list «property»
+        +video_list: list «property»
+        +tambah_gambar(gambar)
+        +pilih_untuk_video(idx) GeneratedImage
+    }
+    class ContentPipeline {
+        +image_generator: ImageGenerator
+        -_projects: list
+        +projects: list «property»
+        +jalankan(prompt, style) ContentProject
+        +tambah_gambar_ke(project, style) GeneratedImage
+    }
+    class PipelineException {
+        +tahap: str
+        +alasan: str
+    }
+    ContentPipeline --> ImageGenerator : memakai
+    ContentPipeline "1" o-- "*" ContentProject : mengelola
+    ContentProject "1" o-- "*" GeneratedImage : berisi
+    ImageGenerator ..> GeneratedImage : membuat
+    Exception <|-- PipelineException
+    ContentProject ..> PipelineException : raise

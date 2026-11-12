@@ -18,12 +18,22 @@ class ImageGenerator(ABC):
         "cinematic": "cinematic shot, dramatic lighting, film grain",
     }
 
+    # STATIC METHOD: fungsi bantu yang tidak butuh self maupun cls
+    @staticmethod
+    def prompt_valid(prompt):
+        return isinstance(prompt, str) and prompt.strip() != ""
+
+    # CLASS METHOD: memakai cls untuk membaca atribut milik kelas
+    @classmethod
+    def daftar_style(cls):
+        return list(cls.STYLE_MODIFIER)
+
     # Fitur 5: menggabungkan prompt + style modifier
     def _build_full_prompt(self, prompt, style):
-        if not isinstance(prompt, str) or not prompt.strip():
+        if not self.prompt_valid(prompt):
             raise PipelineException("IMAGE_GEN", "Prompt tidak boleh kosong")
         if style not in self.STYLE_MODIFIER:
-            daftar = ", ".join(self.STYLE_MODIFIER)
+            daftar = ", ".join(self.daftar_style())
             raise PipelineException("IMAGE_GEN", f"Style '{style}' tidak dikenal. Pilihan: {daftar}")
         return f"{prompt.strip()}, {self.STYLE_MODIFIER[style]}"
 

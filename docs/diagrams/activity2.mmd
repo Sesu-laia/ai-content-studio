@@ -1,0 +1,17 @@
+flowchart TD
+    A((Mulai)) --> B[/"Pengguna memilih menu 4: Pilih gambar untuk video"/]
+    B --> C{"Sudah ada project?"}
+    C -- tidak --> E1["Raise PipelineException PROJECT"]
+    C -- ya --> D["Tampilkan daftar gambar project terakhir"]
+    D --> F[/"Pengguna memasukkan indeks gambar"/]
+    F --> G{"Input berupa angka?"}
+    G -- tidak --> E2["Tampilkan 'Input harus berupa angka'"]
+    G -- ya --> H{"0 <= indeks < jumlah gambar?"}
+    H -- tidak --> E3["Raise PipelineException PILIH_GAMBAR"]
+    H -- ya --> I["pilih_untuk_video(idx) mengembalikan GeneratedImage"]
+    I --> J["Tampilkan gambar terpilih,<br/>siap dijadikan video di Tahap 2"]
+    E1 --> K["Tampilkan pesan [ERROR], kembali ke menu"]
+    E2 --> K
+    E3 --> K
+    J --> Z((Selesai))
+    K --> Z

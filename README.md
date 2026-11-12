@@ -25,6 +25,10 @@ Tidak perlu install library tambahan (hanya Python standar).
 3. Menu **2** → isi prompt dan style
 4. File gambar tersimpan di folder `output/`, buka lewat menu **6**
 
+**Jika muncul error `CERTIFICATE_VERIFY_FAILED` (macOS):** jalankan sekali
+`open "/Applications/Python 3.13/Install Certificates.command"` (sesuaikan versi Python),
+atau `python3 -m pip install --upgrade certifi`. Program otomatis memakai certifi jika terpasang.
+
 Batasan layanan gratis Pollinations: 1 request per 15 detik (program menunggu otomatis),
 gambar bisa memakan waktu 10–60 detik, dan kadang ada watermark.
 
@@ -45,6 +49,7 @@ ai-content-studio-uts/
 ├── config.py                # harga & kurs
 ├── exceptions.py            # PipelineException
 ├── content_pipeline.py      # ContentPipeline (Tahap 1)
+├── ssl_helper.py            # sertifikat SSL (fix error macOS)
 ├── generators/
 │   ├── base.py              # ImageGenerator (Abstract Base Class)
 │   ├── dalle.py             # DALLEImageGenerator

@@ -8,6 +8,7 @@ import webbrowser
 from config import format_biaya
 from content_pipeline import ContentPipeline
 from exceptions import PipelineException
+from generators.base import ImageGenerator
 from generators.dalle import DALLEImageGenerator
 from generators.mock import MockImageGenerator
 from generators.pollinations import PollinationsImageGenerator
@@ -119,11 +120,11 @@ def menu():
                 print(f"Provider diganti ke {nama}")
             elif pilihan == "2":
                 prompt = input("Prompt: ")
-                style = input("Style (realistis/anime/kartun/cinematic): ").strip()
+                style = input(f"Style ({'/'.join(ImageGenerator.daftar_style())}): ").strip()
                 tampilkan_project(pipeline.jalankan(prompt, style))
             elif pilihan == "3":
                 project = project_terakhir(pipeline)
-                style = input("Style (realistis/anime/kartun/cinematic): ").strip()
+                style = input(f"Style ({'/'.join(ImageGenerator.daftar_style())}): ").strip()
                 pipeline.tambah_gambar_ke(project, style)
                 tampilkan_project(project)
             elif pilihan == "4":

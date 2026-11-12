@@ -8,6 +8,7 @@ import urllib.request
 
 from config import HARGA_DALLE_PER_GAMBAR
 from exceptions import PipelineException
+from ssl_helper import buat_ssl_context
 from generators.base import ImageGenerator
 from models.generated_image import GeneratedImage
 
@@ -43,7 +44,7 @@ class DALLEImageGenerator(ImageGenerator):
         )
 
         try:
-            with urllib.request.urlopen(request, timeout=self.timeout) as response:
+            with urllib.request.urlopen(request, timeout=self.timeout, context=buat_ssl_context()) as response:
                 data = json.loads(response.read().decode("utf-8"))
             url = data["data"][0]["url"]
         except urllib.error.HTTPError as e:

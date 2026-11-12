@@ -6,20 +6,40 @@ from exceptions import PipelineException
 
 class ContentProject:
     def __init__(self, prompt):
-        self.prompt = prompt
-        self.gambar_list = []
-        self.video_list = []
+        self.prompt = prompt          # lewat setter -> divalidasi
+        self._gambar_list = []        # private, dibaca lewat property
+        self._video_list = []
+
+    # PROPERTY dengan getter + setter (setter memvalidasi isi prompt)
+    @property
+    def prompt(self):
+        return self._prompt
+
+    @prompt.setter
+    def prompt(self, nilai):
+        if not isinstance(nilai, str) or not nilai.strip():
+            raise PipelineException("PROJECT", "Prompt project tidak boleh kosong")
+        self._prompt = nilai.strip()
+
+    # PROPERTY read-only: list hanya bisa diubah lewat method tambah_gambar()
+    @property
+    def gambar_list(self):
+        return list(self._gambar_list)
+
+    @property
+    def video_list(self):
+        return list(self._video_list)
 
     def tambah_gambar(self, gambar):
-        self.gambar_list.append(gambar)
+        self._gambar_list.append(gambar)
 
     # Fitur 8: memilih gambar yang nanti akan dijadikan video
     def pilih_untuk_video(self, idx):
-        if not self.gambar_list:
+        if not self._gambar_list:
             raise PipelineException("PILIH_GAMBAR", "Project belum punya gambar")
-        if not isinstance(idx, int) or idx < 0 or idx >= len(self.gambar_list):
+        if not isinstance(idx, int) or idx < 0 or idx >= len(self._gambar_list):
             raise PipelineException(
                 "PILIH_GAMBAR",
-                f"Indeks {idx} tidak valid, pilih 0 sampai {len(self.gambar_list) - 1}",
+                f"Indeks {idx} tidak valid, pilih 0 sampai {len(self._gambar_list) - 1}",
             )
-        return self.gambar_list[idx]
+        return self._gambar_list[idx]

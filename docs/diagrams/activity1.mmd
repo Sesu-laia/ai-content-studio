@@ -1,0 +1,23 @@
+flowchart TD
+    A((Mulai)) --> B[/"Pengguna memilih menu 2: Generate gambar"/]
+    B --> C[/"Pengguna mengisi prompt dan style"/]
+    C --> D{"Prompt tidak kosong<br/>dan style dikenal?"}
+    D -- tidak --> E["Raise PipelineException IMAGE_GEN"]
+    D -- ya --> F["_build_full_prompt(): gabung prompt + style modifier"]
+    F --> G{"Provider aktif?"}
+    G -- mock --> H["Buat data gambar offline"]
+    G -- pollinations --> I["Tunggu jeda 15 detik jika perlu,<br/>kirim request ke Pollinations"]
+    G -- dalle --> J{"OPENAI_API_KEY ada?"}
+    J -- tidak --> E
+    J -- ya --> K["Kirim request ke OpenAI DALL-E"]
+    I --> L{"Respons berhasil<br/>dan berupa gambar?"}
+    K --> L
+    L -- tidak --> E
+    L -- ya --> M["Simpan file gambar ke folder output/"]
+    H --> N["Buat objek GeneratedImage"]
+    M --> N
+    N --> O["Buat ContentProject, tambah gambar,<br/>simpan ke daftar project"]
+    O --> P["Tampilkan info gambar + estimasi biaya"]
+    E --> Q["Tampilkan pesan [ERROR], kembali ke menu"]
+    P --> Z((Selesai))
+    Q --> Z

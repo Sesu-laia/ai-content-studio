@@ -10,6 +10,7 @@ import urllib.request
 
 from config import FOLDER_OUTPUT, HARGA_POLLINATIONS_PER_GAMBAR, JEDA_POLLINATIONS
 from exceptions import PipelineException
+from ssl_helper import buat_ssl_context
 from generators.base import ImageGenerator
 from models.generated_image import GeneratedImage
 
@@ -50,7 +51,7 @@ class PollinationsImageGenerator(ImageGenerator):
 
         try:
             PollinationsImageGenerator._waktu_terakhir = time.time()
-            with urllib.request.urlopen(request, timeout=self.timeout) as response:
+            with urllib.request.urlopen(request, timeout=self.timeout, context=buat_ssl_context()) as response:
                 jenis = response.headers.get("Content-Type", "")
                 isi_gambar = response.read()
         except urllib.error.HTTPError as e:
