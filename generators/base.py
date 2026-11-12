@@ -1,5 +1,5 @@
 # IMAGE GENERATOR - ABSTRACT BASE CLASS (Fitur 1 dan 5)
-# Kelas induk untuk semua generator gambar (DALL-E, Stable Diffusion, Mock).
+# Kelas induk untuk semua generator gambar (DALL-E dan Mock).
 # Setiap kelas turunan WAJIB membuat method generate().
 from abc import ABC, abstractmethod
 

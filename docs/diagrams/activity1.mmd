@@ -6,14 +6,12 @@ flowchart TD
     D -- ya --> F["_build_full_prompt(): gabung prompt + style modifier"]
     F --> G{"Provider aktif?"}
     G -- mock --> H["Buat data gambar offline"]
-    G -- pollinations --> I["Tunggu jeda 15 detik jika perlu,<br/>kirim request ke Pollinations"]
     G -- dalle --> J{"OPENAI_API_KEY ada?"}
     J -- tidak --> E
     J -- ya --> K["Kirim request ke OpenAI DALL-E"]
-    I --> L{"Respons berhasil<br/>dan berupa gambar?"}
-    K --> L
+    K --> L{"Respons berhasil<br/>dan berisi url gambar?"}
     L -- tidak --> E
-    L -- ya --> M["Simpan file gambar ke folder output/"]
+    L -- ya --> M["Ambil url gambar dari respons"]
     H --> N["Buat objek GeneratedImage"]
     M --> N
     N --> O["Buat ContentProject, tambah gambar,<br/>simpan ke daftar project"]

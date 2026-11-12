@@ -1,6 +1,6 @@
 # CONTENT PIPELINE (Fitur 9)
 # Pengatur alur pembuatan konten. Di tahap UTS baru Tahap 1: teks -> gambar.
-# Pipeline tidak peduli generatornya DALL-E, Pollinations, atau Mock, cukup
+# Pipeline tidak peduli generatornya DALL-E atau Mock, cukup
 # memanggil generate() (POLYMORPHISM).
 from models.content_project import ContentProject
 

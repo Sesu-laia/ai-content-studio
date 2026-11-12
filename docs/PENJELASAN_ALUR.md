@@ -7,9 +7,8 @@ main.py (CLI)
    │
    ▼
 ContentPipeline ──memakai──► ImageGenerator (abstract)
-   │                             ├── DALLEImageGenerator        (berbayar)
-   │                             ├── PollinationsImageGenerator (gratis, gambar asli)
-   │                             └── MockImageGenerator         (offline)
+   │                             ├── DALLEImageGenerator  (berbayar, butuh API key)
+   │                             └── MockImageGenerator   (offline, untuk demo)
    ▼
 ContentProject ──berisi──► GeneratedImage (gambar_list)
 ```
@@ -19,23 +18,26 @@ Contoh: `pipeline.jalankan("kucing", "anime")`
 
 | Langkah | Terjadi di | Hasil |
 |---|---|---|
-| 1 | `ContentPipeline.jalankan()` membuat `ContentProject("kucing")` | project kosong |
-| 2 | Memanggil `self.image_generator.generate("kucing", "anime")` | |
-| 3 | `generate()` memanggil `_build_full_prompt()` dari kelas induk | `"kucing, anime style, vibrant colors, clean line art"` |
-| 4 | Mock membuat url `mock://image/001.png` (DALL-E memanggil API) | |
-| 5 | Mengembalikan objek `GeneratedImage` | |
+| 1 | `ContentPipeline.jalankan()` memanggil `self.image_generator.generate("kucing", "anime")` | |
+| 2 | `generate()` memanggil `_build_full_prompt()` dari kelas induk | `"kucing, anime style, vibrant colors, clean line art"` |
+| 3 | Mock membuat url `mock://image/001.png` (DALL-E memanggil API) | |
+| 4 | Mengembalikan objek `GeneratedImage` | |
+| 5 | Baru setelah generate berhasil, `jalankan()` membuat `ContentProject("kucing")` | project kosong |
 | 6 | `project.tambah_gambar(gambar)` | `gambar_list` berisi 1 |
 | 7 | Project disimpan ke `pipeline.projects` lalu dikembalikan | |
 | 8 | `main.py` mencetak info gambar + estimasi biaya | tampilan CLI |
 
-## 3. Alur Pollinations (gambar sungguhan)
+Generate dijalankan lebih dulu (`content_pipeline.py`, method `jalankan()`): kalau generate gagal,
+exception langsung keluar dari method, sehingga project kosong tidak ikut tersimpan.
+
+## 3. Alur DALL-E (hanya jika API key tersedia)
 1. `_build_full_prompt()` → `"kucing, anime style, vibrant colors, clean line art"`
-2. `_tunggu_jeda()` → kalau request sebelumnya belum lewat 15 detik, program menunggu dulu
-3. Prompt di-encode ke URL (`urllib.parse.quote`), karena spasi dan koma tidak boleh langsung masuk URL
-4. Request GET ke `https://image.pollinations.ai/prompt/...`
-5. Cek `Content-Type` harus `image/...` (bukan halaman error)
-6. Isi gambar ditulis ke `output/pollinations_<tanggal>_<jam>.jpg`
-7. Mengembalikan `GeneratedImage` dengan `url` = path file tersebut
+2. Cek `self.api_key`. Kalau kosong → `PipelineException("IMAGE_GEN", "OPENAI_API_KEY belum diatur")`
+3. Data request (model, prompt, jumlah, ukuran) diubah ke JSON
+4. Request POST ke `https://api.openai.com/v1/images/generations` dengan header `Authorization: Bearer <api key>`
+5. Respons JSON dibaca, url gambar diambil dari `data["data"][0]["url"]`
+6. HTTP error, koneksi gagal, atau format respons salah → diubah menjadi `PipelineException`
+7. Mengembalikan `GeneratedImage` dengan `url` = alamat gambar dari OpenAI
 
 ## 4. Alur Exception
 Error dibungkus `PipelineException(tahap, alasan)`, jadi pesan selalu menunjukkan **tahap** terjadinya masalah:
@@ -43,9 +45,9 @@ Error dibungkus `PipelineException(tahap, alasan)`, jadi pesan selalu menunjukka
 | Tahap | Penyebab | Dicek di |
 |---|---|---|
 | `IMAGE_GEN` | prompt kosong / style tidak dikenal | `_build_full_prompt()` |
-| `IMAGE_GEN` | API key kosong, HTTP error, koneksi gagal | `DALLEImageGenerator.generate()` |
-| `IMAGE_GEN` | koneksi gagal, timeout, HTTP 429 (terlalu banyak request), respons bukan gambar | `PollinationsImageGenerator.generate()` |
-| `BUKA_GAMBAR` | mencoba membuka gambar hasil mock (bukan file asli) | `main.py` menu 6 |
+| `IMAGE_GEN` | API key kosong, HTTP error, koneksi gagal, format respons salah | `DALLEImageGenerator.generate()` |
+| `IMAGE_GEN` | mock disuruh gagal (`gagal=True`) | `MockImageGenerator.generate()` |
+| `PROJECT` | prompt project kosong / belum ada project | `ContentProject` (setter `prompt`), `main.py` |
 | `PILIH_GAMBAR` | project kosong / indeks di luar jangkauan | `pilih_untuk_video()` |
 | `PROVIDER` | nama provider tidak ada | `main.py` menu 1 |
 
@@ -70,17 +72,17 @@ Tanda method internal (protected): dipakai oleh kelas turunan, bukan dipanggil l
 **Kenapa membuat exception sendiri (`PipelineException`)?**
 Supaya pesan error menyebutkan tahap terjadinya masalah (`IMAGE_GEN`, `PILIH_GAMBAR`, ...). Ini memudahkan mencari sumber error, terutama nanti saat pipeline punya 2 tahap (gambar dan video).
 
-**Kenapa memakai Pollinations?**
-Karena DALL-E berbayar. Pollinations gratis dan tanpa API key, jadi kami tetap bisa menghasilkan gambar AI sungguhan. Karena ia turunan `ImageGenerator`, `ContentPipeline` tidak perlu diubah sama sekali.
+**Kenapa project dibuat setelah generate, bukan sebelumnya?**
+Lihat `ContentPipeline.jalankan()`: baris `generate()` ada di atas baris `ContentProject(prompt)`. Kalau generate gagal, exception langsung keluar, jadi tidak ada project kosong yang tersimpan di `pipeline.projects`.
 
-**Kenapa harus menunggu 15 detik?**
-Itu batas layanan gratis Pollinations. `_waktu_terakhir` disimpan sebagai atribut kelas (bukan atribut objek), jadi berlaku untuk semua objek Pollinations. Kalau tetap kena batas, server membalas HTTP 429 dan kami ubah menjadi `PipelineException`.
+**Kenapa demo memakai Mock, bukan DALL-E?**
+DALL-E berbayar dan butuh API key. Di lokal kami memakai data Mock; DALL-E baru dipakai saat API key tersedia.
 
-**Kenapa cek `Content-Type`?**
-Kadang server membalas halaman error (HTML) dengan status sukses. Kalau tidak dicek, file `.jpg` yang tersimpan sebenarnya rusak.
+**Dari mana program tahu harus pakai Mock atau DALL-E?**
+Dari fungsi `generator_otomatis()` di `main.py`. Fungsi itu membaca `os.environ.get("OPENAI_API_KEY")`: kalau ada isinya, mengembalikan `DALLEImageGenerator()`; kalau tidak, `MockImageGenerator()`. Hasilnya diberikan ke `ContentPipeline(...)` di awal `menu()`. Karena keduanya turunan `ImageGenerator`, `ContentPipeline` tidak diubah sama sekali (polymorphism).
 
-**Kenapa prompt harus di-`quote()`?**
-Prompt dimasukkan ke URL. Spasi dan simbol seperti koma harus diubah ke format URL (`%20`, `%2C`), kalau tidak URL-nya tidak valid.
+**Kalau DALL-E dipilih tapi API key tidak ada?**
+`DALLEImageGenerator.generate()` mengecek `self.api_key` sebelum memanggil API. Kalau kosong, raise `PipelineException("IMAGE_GEN", "OPENAI_API_KEY belum diatur")`, ditangkap di `main.py`, dan program kembali ke menu.
 
 **Kenapa ada Mock?**
 Supaya program bisa didemokan tanpa API key dan tanpa biaya. Mock juga bisa disuruh gagal (`gagal=True`) untuk menunjukkan exception handling.

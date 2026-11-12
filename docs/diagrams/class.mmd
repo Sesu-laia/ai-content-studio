@@ -15,21 +15,12 @@ classDiagram
         +timeout: int
         +generate(prompt, style) GeneratedImage
     }
-    class PollinationsImageGenerator {
-        +lebar: int
-        +tinggi: int
-        +timeout: int
-        -_waktu_terakhir: float$
-        -_tunggu_jeda()
-        +generate(prompt, style) GeneratedImage
-    }
     class MockImageGenerator {
         +gagal: bool
         -_counter: int
         +generate(prompt, style) GeneratedImage
     }
     ImageGenerator <|-- DALLEImageGenerator
-    ImageGenerator <|-- PollinationsImageGenerator
     ImageGenerator <|-- MockImageGenerator
 
     class GeneratedImage {

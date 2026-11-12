@@ -57,5 +57,4 @@ for generator in [MockImageGenerator(), DALLEImageGenerator()]:
         print(generator.nama_provider, "->", hasil.url)
     except PipelineException as e:
         print(generator.nama_provider, "->", e)
-# (Pollinations tidak dimasukkan di sini supaya tidak perlu internet & menunggu 15 detik;
-#  coba lewat menu 2 di main.py)
+# (DALL-E tanpa OPENAI_API_KEY akan melempar PipelineException, bukan membuat program berhenti)

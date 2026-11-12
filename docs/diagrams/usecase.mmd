@@ -1,13 +1,12 @@
 flowchart LR
     CC(["👤 Content Creator"])
-    AI(["🖥️ Layanan AI<br/>(Pollinations / DALL-E)"])
+    AI(["🖥️ Layanan AI<br/>(OpenAI DALL-E)"])
     subgraph SYS["AI Content Creator Studio (Tahap UTS)"]
         UC01(["UC-01 Pilih provider gambar"])
         UC02(["UC-02 Generate gambar dari prompt"])
         UC03(["UC-03 Tambah gambar style lain"])
         UC04(["UC-04 Pilih gambar untuk video"])
         UC05(["UC-05 Lihat project & estimasi biaya"])
-        UC06(["UC-06 Buka file gambar"])
         UCV(["Validasi prompt & style"])
     end
     CC --- UC01
@@ -15,7 +14,6 @@ flowchart LR
     CC --- UC03
     CC --- UC04
     CC --- UC05
-    CC --- UC06
     UC02 -.->|"«include»"| UCV
     UC03 -.->|"«include»"| UCV
     UC02 --- AI

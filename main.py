@@ -3,7 +3,6 @@
 #            python main.py --demo   -> demo otomatis (mode Mock, tanpa API key)
 import os
 import sys
-import webbrowser
 
 from config import format_biaya
 from content_pipeline import ContentPipeline
@@ -11,14 +10,20 @@ from exceptions import PipelineException
 from generators.base import ImageGenerator
 from generators.dalle import DALLEImageGenerator
 from generators.mock import MockImageGenerator
-from generators.pollinations import PollinationsImageGenerator
 
 # Daftar provider gambar yang bisa dipilih user
 PROVIDER_GAMBAR = {
     "mock": MockImageGenerator,
     "dalle": DALLEImageGenerator,
-    "pollinations": PollinationsImageGenerator,
 }
+
+
+# Arahan dosen: di lokal pakai data Mock, DALL-E baru dipakai saat API key tersedia.
+# Karena keduanya turunan ImageGenerator, pipeline tidak perlu tahu mana yang dipilih.
+def generator_otomatis():
+    if os.environ.get("OPENAI_API_KEY"):
+        return DALLEImageGenerator()
+    return MockImageGenerator()
 
 
 # Fitur 10: menampilkan info gambar hasil + estimasi biaya
@@ -33,14 +38,6 @@ def tampilkan_project(project, nomor=None):
         print(f"      biaya    : {format_biaya(g.biaya)}")
     total = sum(g.biaya for g in project.gambar_list)
     print(f"  Estimasi biaya project: {format_biaya(total)}")
-
-
-def buka_gambar(gambar):
-    """Membuka file gambar hasil generate dengan aplikasi bawaan laptop."""
-    if not os.path.isfile(gambar.url):
-        raise PipelineException("BUKA_GAMBAR", f"{gambar.url} bukan file gambar asli (hasil mode mock)")
-    webbrowser.open("file://" + os.path.abspath(gambar.url))
-    print(f"Membuka {gambar.url}")
 
 
 def project_terakhir(pipeline):
@@ -69,7 +66,7 @@ def demo():
     print(f"  Gambar terpilih: {terpilih.url} (style {terpilih.style})")
 
     print("\n[4] Polymorphism: generator berbeda, pemanggilan sama")
-    print("    (pollinations butuh internet, bisa memakan waktu 10-60 detik)")
+    print("    (dalle hanya berhasil jika OPENAI_API_KEY sudah diatur)")
     for nama, kelas in PROVIDER_GAMBAR.items():
         try:
             gambar = kelas().generate("gunung bersalju", "cinematic")
@@ -96,7 +93,11 @@ def demo():
 
 
 def menu():
-    pipeline = ContentPipeline(MockImageGenerator())
+    pipeline = ContentPipeline(generator_otomatis())
+    if pipeline.image_generator.nama_provider == "mock":
+        print("OPENAI_API_KEY tidak ditemukan -> memakai data Mock (lokal).")
+    else:
+        print("OPENAI_API_KEY ditemukan -> generate memakai DALL-E.")
     while True:
         print("\n" + "=" * 50)
         print("  AI CONTENT CREATOR STUDIO (UTS)")
@@ -107,7 +108,6 @@ def menu():
         print("3. Tambah gambar style lain ke project terakhir")
         print("4. Pilih gambar untuk dijadikan video")
         print("5. Lihat semua project")
-        print("6. Buka file gambar dari project terakhir")
         print("0. Keluar")
         pilihan = input("Pilih menu: ").strip()
 
@@ -138,11 +138,6 @@ def menu():
                     print("Belum ada project.")
                 for nomor, p in enumerate(pipeline.projects, start=1):
                     tampilkan_project(p, nomor)
-            elif pilihan == "6":
-                project = project_terakhir(pipeline)
-                tampilkan_project(project)
-                idx = int(input("Indeks gambar: "))
-                buka_gambar(project.pilih_untuk_video(idx))
             elif pilihan == "0":
                 print("Sampai jumpa!")
                 break
